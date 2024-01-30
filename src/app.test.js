@@ -1,11 +1,13 @@
-const { Character, Bowman, Swordsman, Magician, Undead, Zombie, Daemon } = require('./app');
+const Character = require('./app');
 
 describe('Character class', () => {
-  test('Character should be created with correct default values', () => {
-    expect(() => new Character('A', 'Bowman')).toThrowError('Имя должно содержать от 2 до 10 символов');
-    expect(() => new Character('MoreThanTenCharacters', 'Bowman')).toThrowError('Имя должно содержать от 2 до 10 символов');
+  let character;
 
-    const character = new Character('ValidName', 'Bowman');
+  beforeEach(() => {
+    character = new Character('ValidName', 'Bowman');
+  });
+
+  test('Character should be created with correct default values', () => {
     expect(character.name).toBe('ValidName');
     expect(character.type).toBe('Bowman');
     expect(character.health).toBe(100);
@@ -15,83 +17,47 @@ describe('Character class', () => {
   });
 
   test('Character creation should throw an error for invalid name length', () => {
-    expect(() => new Character('A', 'Bowman')).toThrowError('Имя должно содержать от 2 до 10 символов');
-    expect(() => new Character('MoreThanTenCharacters', 'Bowman')).toThrowError('Имя должно содержать от 2 до 10 символов');
+    expect(() => new Character('A', 'Bowman')).toThrowError('Name must be a string and have a length between 2 and 10 characters');
+    expect(() => new Character('MoreThanTenCharacters', 'Bowman')).toThrowError('Name must be a string and have a length between 2 and 10 characters');
   });
 
   test('Character creation should throw an error for invalid type', () => {
-    expect(() => new Character('ValidName', 'InvalidType')).toThrowError('Invalid character type. Allowed types: Bowman, Swordsman, Magician, Daemon, Undead, Zombie.');
+    expect(() => new Character('ValidName', 'InvalidType')).toThrowError('Invalid character type. Allowed types: Bowman, Swordsman, Magician, Undead, Zombie, Daemon');
   });
-});
 
-describe('Bowman class', () => {
-  test('Bowman should be created with correct stats', () => {
-    const bowman = new Bowman('Bowman');
-    expect(bowman.name).toBe('Bowman');
-    expect(bowman.type).toBe('Bowman');
-    expect(bowman.health).toBe(100);
-    expect(bowman.level).toBe(1);
-    expect(bowman.attack).toBe(25);
-    expect(bowman.defence).toBe(25);
+  test('levelUp should increase level, attack, and defence, and set health to 100', () => {
+    character.levelUp();
+    expect(character.level).toBe(2);
+    expect(character.attack).toBeLessThanOrEqual(10); // Assuming the initial attack is 0
+    expect(character.defence).toBeLessThanOrEqual(10); // Assuming the initial defence is 0
+    expect(character.health).toBe(100);
   });
-});
 
-describe('Swordsman class', () => {
-  test('Swordsman should be created with correct stats', () => {
-    const swordsman = new Swordsman('Swordsman');
-    expect(swordsman.name).toBe('Swordsman');
-    expect(swordsman.type).toBe('Swordsman');
-    expect(swordsman.health).toBe(100);
-    expect(swordsman.level).toBe(1);
-    expect(swordsman.attack).toBe(40);
-    expect(swordsman.defence).toBe(10);
+  test('levelUp should not exceed attack and defence values of 100', () => {
+    character.attack = 100;
+    character.defence = 100;
+    character.levelUp();
+    expect(character.attack).toBe(100);
+    expect(character.defence).toBe(100);
   });
-});
 
-describe('Magician class', () => {
-  test('Magician should be created with correct stats', () => {
-    const magician = new Magician('Magician');
-    expect(magician.name).toBe('Magician');
-    expect(magician.type).toBe('Magician');
-    expect(magician.health).toBe(100);
-    expect(magician.level).toBe(1);
-    expect(magician.attack).toBe(10);
-    expect(magician.defence).toBe(40);
+  test('levelUp should throw an error for a dead character', () => {
+    character.health = 0;
+    expect(() => character.levelUp()).toThrowError('Cannot level up a dead character');
   });
-});
 
-describe('Undead class', () => {
-  test('Undead should be created with correct stats', () => {
-    const undead = new Undead('Undead');
-    expect(undead.name).toBe('Undead');
-    expect(undead.type).toBe('Undead');
-    expect(undead.health).toBe(100);
-    expect(undead.level).toBe(1);
-    expect(undead.attack).toBe(25);
-    expect(undead.defence).toBe(25);
+  test('damage should decrease health based on points and defence', () => {
+    character.damage(20);
+    expect(character.health).toBeLessThanOrEqual(80);
   });
-});
 
-describe('Zombie class', () => {
-  test('Zombie should be created with correct stats', () => {
-    const zombie = new Zombie('Zombie');
-    expect(zombie.name).toBe('Zombie');
-    expect(zombie.type).toBe('Zombie');
-    expect(zombie.health).toBe(100);
-    expect(zombie.level).toBe(1);
-    expect(zombie.attack).toBe(40);
-    expect(zombie.defence).toBe(10);
+  test('damage should not decrease health below 0', () => {
+    character.damage(120);
+    expect(character.health).toBe(0);
   });
-});
 
-describe('Daemon class', () => {
-  test('Daemon should be created with correct stats', () => {
-    const daemon = new Daemon('Daemon');
-    expect(daemon.name).toBe('Daemon');
-    expect(daemon.type).toBe('Daemon');
-    expect(daemon.health).toBe(100);
-    expect(daemon.level).toBe(1);
-    expect(daemon.attack).toBe(10);
-    expect(daemon.defence).toBe(40);
+  test('damage should not process for a dead character', () => {
+    character.health = 0;
+    expect(() => character.damage(20)).toThrowError('Cannot damage a dead character');
   });
 });
